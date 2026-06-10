@@ -1,5 +1,30 @@
-# Vue 3 + Vite
+# StrongChess POS
 
-This template should help get you started developing with Vue 3 in Vite. The template uses Vue 3 `<script setup>` SFCs, check out the [script setup docs](https://v3.vuejs.org/api/sfc-script-setup.html#sfc-script-setup) to learn more.
+A lightweight point-of-sale web application built for small businesses with a focused product catalog.
 
-Learn more about IDE Support for Vue in the [Vue Docs Scaling up Guide](https://vuejs.org/guide/scaling-up/tooling.html#ide-support).
+## Features
+- 🛒 Sales management
+- 📦 Inventory tracking
+- 📊 Sales reports
+- 🔐 Secure login & user management
+
+## Tech Stack
+- **Frontend:** Vue.js
+- **Backend:** Spring Boot
+- **Database:** MySQL
+
+## Getting Started
+
+### Prerequisites
+- Node.js
+- Java 17+
+- MySQL
+
+### Frontend
+cd frontend
+npm install
+npm run dev
+
+### Backend
+cd backend
+./mvnw spring-boot:run
