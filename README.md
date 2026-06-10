@@ -1,4 +1,4 @@
-# StrongChess POS
+# StrongChess POS — Frontend
 
 A lightweight point-of-sale web application built for small businesses with a focused product catalog.
 
