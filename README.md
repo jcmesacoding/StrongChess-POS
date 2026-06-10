@@ -28,3 +28,7 @@ npm run dev
 ### Backend
 cd backend
 ./mvnw spring-boot:run
+
+## API Documentation
+Once the backend is running, visit:
+http://localhost:8080/swagger-ui.html
