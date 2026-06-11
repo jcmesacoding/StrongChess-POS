@@ -18,7 +18,16 @@ const login = async () => {
     localStorage.setItem("token", response.data.token);
     localStorage.setItem("username", response.data.username);
     localStorage.setItem("role", response.data.role);
-    await router.push("/dashboard");
+
+    const role = response.data.role;
+    if (role === 'ADMIN') {
+      await router.push("/users");
+    } else if (role === 'WRITE') {
+      await router.push("/dashboard");
+    } else {
+      await router.push("/sales");
+    }
+
   } catch (error) {
     console.error("Login error:", error);
     errorMessage.value = "Invalid username or password";
