@@ -1,11 +1,10 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://strongchess-pos-backend.onrender.com/api/v1"
+  baseURL: "https://strongchess-pos-backend.onrender.com/api/v1",
 });
 
-api.interceptors.request.use(config => {
-
+api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
 
   if (token) {
@@ -13,28 +12,21 @@ api.interceptors.request.use(config => {
   }
 
   return config;
-
 });
 
 api.interceptors.response.use(
+  (response) => response,
 
-  response => response,
-
-  error => {
-
-    if (error.response?.status === 401) {
-
+  (error) => {
+    if (error.response?.status === 401 || error.response?.status === 403) {
       localStorage.removeItem("token");
       localStorage.removeItem("username");
-
+      localStorage.removeItem("role");
       window.location.href = "/login";
-
     }
 
     return Promise.reject(error);
-
-  }
-
+  },
 );
 
 export default api;
