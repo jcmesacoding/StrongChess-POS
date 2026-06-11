@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import authService from '../services/authService'
+import userService from '../services/userService'
 
 const users = ref([])
 const showModal = ref(false)
@@ -28,6 +29,14 @@ const resetForm = () => {
   errorMessage.value = ''
 }
 
+const loadUsers = async () => {
+  try {
+    users.value = (await userService.getAll()).data
+  } catch (error) {
+    console.error('Error loading users:', error)
+  }
+}
+
 const createUser = async () => {
   errorMessage.value = ''
   try {
@@ -35,11 +44,14 @@ const createUser = async () => {
     successMessage.value = `User ${form.value.username} created successfully`
     showModal.value = false
     resetForm()
+    await loadUsers()
     setTimeout(() => { successMessage.value = '' }, 3000)
   } catch (error) {
     errorMessage.value = error.response?.data?.message || 'Error creating user'
   }
 }
+
+onMounted(() => { loadUsers() })
 </script>
 
 <template>
@@ -64,27 +76,98 @@ const createUser = async () => {
       {{ successMessage }}
     </div>
 
-    <!-- Roles info -->
+    <!-- Stats -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-6">
       <div class="bg-white rounded-xl shadow-sm p-4 lg:p-5">
-        <p class="text-gray-500 text-sm">ADMIN</p>
-        <p class="text-xs text-gray-400 mt-1">Full access to all features</p>
+        <p class="text-gray-500 text-sm">Total Users</p>
+        <h2 class="text-2xl font-bold text-[#213141]">{{ users.length }}</h2>
       </div>
       <div class="bg-white rounded-xl shadow-sm p-4 lg:p-5">
-        <p class="text-gray-500 text-sm">WRITE</p>
-        <p class="text-xs text-gray-400 mt-1">Can create and edit data</p>
+        <p class="text-gray-500 text-sm">Admins</p>
+        <h2 class="text-2xl font-bold text-[#213141]">
+          {{ users.filter(u => u.roles.includes('ADMIN')).length }}
+        </h2>
       </div>
       <div class="bg-white rounded-xl shadow-sm p-4 lg:p-5">
-        <p class="text-gray-500 text-sm">READ</p>
-        <p class="text-xs text-gray-400 mt-1">View only access</p>
+        <p class="text-gray-500 text-sm">Employees</p>
+        <h2 class="text-2xl font-bold text-[#213141]">
+          {{ users.filter(u => !u.roles.includes('ADMIN')).length }}
+        </h2>
       </div>
     </div>
 
-    <!-- Info card -->
-    <div class="bg-white rounded-xl shadow-sm p-6 text-center text-gray-500">
-      <p class="text-4xl mb-3">👥</p>
-      <p class="font-medium text-[#213141]">Create users with the button above</p>
-      <p class="text-sm mt-1">Assign ADMIN, WRITE or READ roles</p>
+    <!-- Tabla desktop -->
+    <div class="hidden lg:block bg-white rounded-xl shadow-sm overflow-hidden">
+      <div class="px-6 py-4 border-b" style="background-color:#bef1dd;">
+        <h2 class="font-semibold text-[#213141]">User List</h2>
+      </div>
+      <table class="w-full">
+        <thead>
+          <tr class="border-b">
+            <th class="text-left px-6 py-4">Username</th>
+            <th class="text-left px-6 py-4">Name</th>
+            <th class="text-left px-6 py-4">Email</th>
+            <th class="text-left px-6 py-4">Role</th>
+            <th class="text-left px-6 py-4">Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="user in users" :key="user.id" class="border-b hover:bg-gray-50">
+            <td class="px-6 py-4 font-medium">{{ user.username }}</td>
+            <td class="px-6 py-4">{{ user.firstName }} {{ user.lastName }}</td>
+            <td class="px-6 py-4">{{ user.email }}</td>
+            <td class="px-6 py-4">
+              <span v-for="role in user.roles" :key="role"
+                class="px-2 py-1 rounded-full text-xs mr-1"
+                :class="{
+                  'bg-purple-100 text-purple-700': role === 'ADMIN',
+                  'bg-blue-100 text-blue-700': role === 'WRITE',
+                  'bg-gray-100 text-gray-700': role === 'READ'
+                }">
+                {{ role }}
+              </span>
+            </td>
+            <td class="px-6 py-4">
+              <span class="px-3 py-1 rounded-full text-sm"
+                :class="user.enabled ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
+                {{ user.enabled ? 'Active' : 'Inactive' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Cards móvil -->
+    <div class="lg:hidden space-y-3">
+      <div class="px-1 py-2">
+        <h2 class="font-semibold text-[#213141]">User List</h2>
+      </div>
+      <div v-for="user in users" :key="user.id"
+        class="bg-white rounded-xl shadow-sm p-4">
+        <div class="flex justify-between items-start mb-2">
+          <div>
+            <p class="font-semibold text-[#213141]">{{ user.username }}</p>
+            <p class="text-sm text-gray-500">{{ user.firstName }} {{ user.lastName }}</p>
+            <p class="text-xs text-gray-400">{{ user.email }}</p>
+          </div>
+          <div class="text-right">
+            <span v-for="role in user.roles" :key="role"
+              class="px-2 py-1 rounded-full text-xs block mb-1"
+              :class="{
+                'bg-purple-100 text-purple-700': role === 'ADMIN',
+                'bg-blue-100 text-blue-700': role === 'WRITE',
+                'bg-gray-100 text-gray-700': role === 'READ'
+              }">
+              {{ role }}
+            </span>
+            <span class="px-2 py-1 rounded-full text-xs"
+              :class="user.enabled ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
+              {{ user.enabled ? 'Active' : 'Inactive' }}
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -135,7 +218,6 @@ const createUser = async () => {
           </select>
         </div>
 
-        <!-- Error -->
         <div v-if="errorMessage"
           class="px-4 py-3 rounded-xl bg-red-50 text-red-600 text-sm">
           {{ errorMessage }}
