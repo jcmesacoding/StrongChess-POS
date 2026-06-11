@@ -1,62 +1,65 @@
+<script setup>
+import { useRouter } from 'vue-router'
+
+const emit = defineEmits(['close'])
+const router = useRouter()
+
+const navigate = (path) => {
+  router.push(path)
+  emit('close')
+}
+</script>
+
 <template>
   <aside
-  class="w-80 h-auto"
-  style="background-color: #2D4A5A;
-  color: #ffffff;"
->
+    class="w-72 lg:w-80 h-full"
+    style="background-color: #2D4A5A; color: #ffffff;"
+  >
 
-    <div class="h-16 flex items-center px-6 border-b">
-      <h1
-      class="text-base font-semibold"
-      style="color: #bcf7d9;"
-      >
+    <div class="h-16 flex items-center justify-between px-6 border-b">
+      <h1 class="text-base font-semibold" style="color: #bcf7d9;">
         ♜ Strongchess POS
       </h1>
+      <!-- Botón cerrar solo en móvil -->
+      <button
+        class="lg:hidden text-white text-xl hover:opacity-70"
+        @click="emit('close')"
+      >
+        ✕
+      </button>
     </div>
 
     <nav class="p-4 space-y-2">
 
-      <RouterLink
-        to="/"
-        class="block p-3 rounded-lg hover:bg-slate-100 hover:text-[#000000]"
-      >
+      <button @click="navigate('/')"
+        class="w-full text-left p-3 rounded-lg hover:bg-slate-100 hover:text-black transition">
         Dashboard
-      </RouterLink>
+      </button>
 
-      <RouterLink
-        to="/products"
-        class="block p-3 rounded-lg hover:bg-slate-100 hover:text-[#000000]"
-      >
+      <button @click="navigate('/products')"
+        class="w-full text-left p-3 rounded-lg hover:bg-slate-100 hover:text-black transition">
         Products
-      </RouterLink>
+      </button>
 
-      <RouterLink
-        to="/inventory"
-        class="block p-3 rounded-lg hover:bg-slate-100 hover:text-[#000000]"
-      >
+      <button @click="navigate('/inventory')"
+        class="w-full text-left p-3 rounded-lg hover:bg-slate-100 hover:text-black transition">
         Inventory
-      </RouterLink>
+      </button>
 
-      <RouterLink
-        to="/sales"
-        class="block p-3 rounded-lg hover:bg-slate-100 hover:text-[#000000]"
-      >
+      <button @click="navigate('/sales')"
+        class="w-full text-left p-3 rounded-lg hover:bg-slate-100 hover:text-black transition">
         Sales
-      </RouterLink>
+      </button>
 
-      <RouterLink
-        to="/customers"
-        class="block p-3 rounded-lg hover:bg-slate-100 hover:text-[#000000]"
-      >
+      <button @click="navigate('/customers')"
+        class="w-full text-left p-3 rounded-lg hover:bg-slate-100 hover:text-black transition">
         Customers
-      </RouterLink>
+      </button>
 
-      <RouterLink
-        to="/reports"
-        class="block p-3 rounded-lg hover:bg-slate-100 hover:text-[#000000]"
-      >
+      <button @click="navigate('/reports')"
+        class="w-full text-left p-3 rounded-lg hover:bg-slate-100 hover:text-black transition">
         Reports
-      </RouterLink>
+      </button>
 
     </nav>
 
