@@ -10,19 +10,12 @@ const password = ref("");
 
 const login = async () => {
 
-  console.log("1. Login ejecutado");
-
   try {
-
-    console.log("2. Antes del backend");
 
     const response = await authService.login({
       username: username.value,
       password: password.value
     });
-
-    console.log("3. Respuesta recibida");
-    console.log(response);
 
     localStorage.setItem(
       "token",
@@ -33,8 +26,6 @@ const login = async () => {
       "username",
       response.data.username
     );
-
-    console.log("4. Antes de router.push");
 
     await router.push("/dashboard");
 
@@ -47,7 +38,6 @@ const login = async () => {
     console.error("RESPONSE:", error.response);
 
     console.error("REQUEST:", error.request);
-
   }
 
 };
