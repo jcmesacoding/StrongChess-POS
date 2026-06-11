@@ -4,6 +4,9 @@ export default {
   getAll() {
     return api.get("/users");
   },
+  getMe() {
+    return api.get("/users/me");
+  },
   register(user) {
     return api.post("/auth/register", user);
   },
@@ -12,5 +15,5 @@ export default {
   },
   delete(id) {
     return api.delete(`/users/${id}`);
-  }
-}
+  },
+};
