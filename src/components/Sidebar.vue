@@ -1,5 +1,6 @@
 <script setup>
-import { useRouter, computed } from 'vue-router'
+import { useRouter } from 'vue-router'
+import { computed } from 'vue'
 
 const emit = defineEmits(['close'])
 const router = useRouter()
