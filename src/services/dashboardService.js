@@ -1,25 +1,16 @@
 import api from "./api";
 
 export default {
-
   getAll() {
     return api.get("/dashboard");
   },
-
-  getById(id) {
-    return api.get(`/dashboard/${id}`);
+  getSalesByDay() {
+    return api.get("/dashboard/sales-by-day");
   },
-
-  create(dashboard) {
-    return api.post("/dashboard", dashboard);
+  getSalesByMonth() {
+    return api.get("/dashboard/sales-by-month");
   },
-
-  update(id, dashboard) {
-    return api.put(`/dashboard/${id}`, dashboard);
-  },
-
-  delete(id) {
-    return api.delete(`/dashboard/${id}`);
+  getTopProducts() {
+    return api.get("/dashboard/top-products");
   }
-
 }
