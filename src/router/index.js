@@ -6,8 +6,7 @@ import InventoryView from "../views/InventoryView.vue";
 import SalesView from "../views/SalesView.vue";
 import CustomersView from "../views/CustomersView.vue";
 import ReportsView from "../views/ReportsView.vue";
-import LoginView from '../views/LoginView.vue'
-
+import LoginView from "../views/LoginView.vue";
 
 const routes = [
   {
@@ -18,6 +17,11 @@ const routes = [
     path: "/login",
     name: "login",
     component: LoginView,
+  },
+  {
+    path: "/users",
+    name: "users",
+    component: () => import("../views/UsersView.vue"),
   },
   {
     path: "/dashboard",
@@ -48,7 +52,7 @@ const routes = [
     path: "/reports",
     name: "reports",
     component: ReportsView,
-  }
+  },
 ];
 
 const router = createRouter({
@@ -57,7 +61,6 @@ const router = createRouter({
 });
 
 router.beforeEach((to) => {
-
   const token = localStorage.getItem("token");
 
   if (to.path === "/login") {
@@ -69,7 +72,6 @@ router.beforeEach((to) => {
   }
 
   return true;
-
 });
 
 export default router;
