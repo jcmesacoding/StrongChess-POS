@@ -7,6 +7,8 @@ import customerService from "../services/customerService";
 import employeeService from "../services/employeeService";
 import voucherTypeService from "../services/voucherTypeService";
 import ToastNotification from "../components/ToastNotification.vue";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const { t } = useI18n()
 
@@ -23,7 +25,9 @@ const showToast = ref(false);
 const toastMessage = ref("");
 const toastType = ref("success");
 const search = ref("");
-const showCart = ref(false); // para móvil
+const showCart = ref(false);
+const showInvoiceModal = ref(false);
+const currentInvoice = ref(null);
 
 const total = computed(() =>
   cart.value.reduce((sum, item) => sum + (item.salePrice * item.units) - item.discount, 0)
@@ -63,37 +67,147 @@ const removeItem = (productId) => {
 
 const completeSale = async () => {
   if (!customerId.value || !employeeId.value || !voucherTypeId.value) {
-    triggerToast("Please select customer, employee and voucher type", "error");
+    triggerToast(t('sales.error_select'), "error");
     return;
   }
   if (cart.value.length === 0) {
-    triggerToast("Cart is empty", "error");
+    triggerToast(t('sales.error_empty_cart'), "error");
     return;
   }
   try {
+    const cartSnapshot = [...cart.value];
     const payload = {
       customerId: Number(customerId.value),
       employeeId: employeeId.value,
       voucherTypeId: Number(voucherTypeId.value),
-      details: cart.value.map(item => ({
+      details: cartSnapshot.map(item => ({
         productId: item.productId,
         units: item.units,
         salePrice: item.salePrice,
         discount: item.discount
       }))
     };
-    await salesService.create(payload);
+
+    const response = await salesService.create(payload);
     await loadSales();
-    triggerToast("Sale completed successfully", "success");
+
+    // Buscar la venta recién creada para la factura
+    const createdSale = sales.value[0]
+    const customer = customers.value.find(c => c.id === Number(customerId.value))
+    const employee = employees.value.find(e => e.id === employeeId.value)
+
+    currentInvoice.value = {
+      voucherSerie: createdSale?.voucherSerie || 'A01',
+      voucherNumber: createdSale?.voucherNumber || '',
+      saleDate: createdSale?.saleDate || new Date().toISOString(),
+      customerName: createdSale?.customerName || '',
+      employeeName: createdSale?.employeeName || '',
+      items: cartSnapshot,
+      total: cartSnapshot.reduce((sum, item) => sum + (item.salePrice * item.units) - item.discount, 0)
+    }
+
     cart.value = [];
     customerId.value = "";
     employeeId.value = "";
     voucherTypeId.value = "";
     showCart.value = false;
+    showInvoiceModal.value = true;
+
   } catch (error) {
     triggerToast(error.response?.data?.message || "Error creating sale", "error");
   }
 };
+
+const viewInvoice = async (saleId) => {
+  try {
+    const response = await salesService.getById(saleId)
+    const sale = response.data
+
+    currentInvoice.value = {
+      voucherSerie: sale.voucherSerie,
+      voucherNumber: sale.voucherNumber,
+      saleDate: sale.saleDate,
+      customerName: sale.customerName,
+      employeeName: sale.employeeName,
+      items: sale.details?.map(d => ({
+        productName: d.productName,
+        units: d.units,
+        salePrice: d.salePrice,
+        discount: d.discount || 0
+      })) || [],
+      total: sale.total
+    }
+
+    showInvoiceModal.value = true
+  } catch (error) {
+    triggerToast("Error loading invoice", "error")
+  }
+};
+
+const downloadInvoicePDF = () => {
+  if (!currentInvoice.value) return;
+  const doc = new jsPDF()
+  const inv = currentInvoice.value
+
+  // Header
+  doc.setFontSize(20)
+  doc.setTextColor(33, 49, 65)
+  doc.text('StrongChess POS', 14, 20)
+
+  doc.setFontSize(12)
+  doc.setTextColor(100)
+  doc.text('INVOICE', 14, 30)
+
+  // Invoice details
+  doc.setFontSize(10)
+  doc.setTextColor(33, 49, 65)
+  doc.text(`Invoice: ${inv.voucherSerie}-${inv.voucherNumber}`, 14, 42)
+  doc.text(`Date: ${inv.saleDate.split('T')[0]}`, 14, 49)
+  doc.text(`Customer: ${inv.customerName}`, 14, 56)
+  doc.text(`Employee: ${inv.employeeName}`, 14, 63)
+
+  // Line
+  doc.setDrawColor(190, 241, 221)
+  doc.setLineWidth(0.5)
+  doc.line(14, 68, 196, 68)
+
+  // Items table
+  autoTable(doc, {
+    startY: 74,
+    head: [['Product', 'Qty', 'Unit Price', 'Discount', 'Subtotal']],
+    body: inv.items.map(item => [
+      item.productName,
+      item.units,
+      `$${Number(item.salePrice).toFixed(2)}`,
+      `$${Number(item.discount || 0).toFixed(2)}`,
+      `$${(item.salePrice * item.units - (item.discount || 0)).toFixed(2)}`
+    ]),
+    headStyles: {
+      fillColor: [45, 74, 90],
+      textColor: 255,
+      fontStyle: 'bold'
+    },
+    alternateRowStyles: {
+      fillColor: [245, 255, 250]
+    },
+    styles: { fontSize: 10 }
+  })
+
+  // Total
+  const finalY = doc.lastAutoTable.finalY + 10
+  doc.setFontSize(13)
+  doc.setFont(undefined, 'bold')
+  doc.setTextColor(33, 49, 65)
+  doc.text(`TOTAL: $${Number(inv.total).toFixed(2)}`, 14, finalY)
+
+  // Footer
+  doc.setFontSize(9)
+  doc.setFont(undefined, 'normal')
+  doc.setTextColor(150)
+  doc.text('Thank you for your purchase!', 14, finalY + 12)
+
+  doc.save(`invoice-${inv.voucherSerie}-${inv.voucherNumber}.pdf`)
+}
 
 const loadCustomers = async () => {
   try { customers.value = (await customerService.getAll()).data; }
@@ -134,7 +248,6 @@ const triggerToast = (message, type = "success") => {
   toastTimeout = setTimeout(() => { showToast.value = false; }, 3000);
 };
 </script>
-
 <template>
   <div class="space-y-4 lg:space-y-6">
 
@@ -148,12 +261,8 @@ const triggerToast = (message, type = "success") => {
         <h1 class="text-2xl lg:text-3xl font-bold text-[#213141]">{{ $t('sales.title') }}</h1>
         <p class="text-gray-600 text-sm lg:text-base">{{ $t('sales.subtitle') }}</p>
       </div>
-      <!-- Botón carrito flotante en móvil -->
-      <button
-        class="lg:hidden relative px-4 py-2 rounded-xl text-white font-medium text-sm"
-        style="background-color:#213141"
-        @click="showCart = true"
-      >
+      <button class="lg:hidden relative px-4 py-2 rounded-xl text-white font-medium text-sm"
+        style="background-color:#213141" @click="showCart = true">
         🛒 {{ $t('sales.cart') }}
         <span v-if="cart.length > 0"
           class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -187,7 +296,7 @@ const triggerToast = (message, type = "success") => {
     <!-- Layout productos + carrito -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-      <!-- Products (full width en móvil) -->
+      <!-- Products -->
       <div class="lg:col-span-2">
         <div class="bg-white rounded-xl shadow-sm p-4 lg:p-5">
           <div class="mb-4">
@@ -203,7 +312,7 @@ const triggerToast = (message, type = "success") => {
               <button @click="addToCart(product)"
                 class="mt-3 w-full py-2 rounded-lg text-white text-sm"
                 style="background-color:#213141;">
-                {{ $t('sales.add_to_cart') }}
+                {{ $t('sales.add') }}
               </button>
             </div>
           </div>
@@ -213,7 +322,7 @@ const triggerToast = (message, type = "success") => {
         </div>
       </div>
 
-      <!-- Cart desktop (oculto en móvil) -->
+      <!-- Cart desktop -->
       <div class="hidden lg:block">
         <div class="bg-white rounded-xl shadow-sm p-5">
           <h2 class="text-xl font-semibold mb-5 text-[#213141]">{{ $t('sales.current_sale') }}</h2>
@@ -233,7 +342,7 @@ const triggerToast = (message, type = "success") => {
                 <button @click="removeItem(item.productId)" class="text-red-500 text-sm">{{ $t('sales.remove') }}</button>
               </div>
             </div>
-            <div v-if="cart.length === 0" class="text-center text-gray-500">{{ $t('sales.error_empty_cart') }}</div>
+            <div v-if="cart.length === 0" class="text-center text-gray-500">{{ $t('sales.no_products') }}</div>
           </div>
           <div class="mt-6 space-y-3">
             <div class="flex justify-between"><span>{{ $t('sales.subtotal') }}</span><span>${{ formattedTotal }}</span></div>
@@ -242,7 +351,7 @@ const triggerToast = (message, type = "success") => {
           </div>
           <button @click="completeSale" class="w-full mt-6 py-3 rounded-xl text-white font-semibold"
             style="background-color:#213141;">
-            {{ $t('sales.completed') }}
+            {{ $t('sales.complete') }}
           </button>
         </div>
       </div>
@@ -263,6 +372,7 @@ const triggerToast = (message, type = "success") => {
             <th class="text-left px-6 py-4">{{ $t('sales.employee') }}</th>
             <th class="text-left px-6 py-4">{{ $t('sales.amount') }}</th>
             <th class="text-left px-6 py-4">{{ $t('sales.date') }}</th>
+            <th class="text-left px-6 py-4">{{ $t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -270,8 +380,18 @@ const triggerToast = (message, type = "success") => {
             <td class="px-6 py-4">{{ sale.voucherSerie }}-{{ sale.voucherNumber }}</td>
             <td class="px-6 py-4">{{ sale.customerName }}</td>
             <td class="px-6 py-4">{{ sale.employeeName }}</td>
-            <td class="px-6 py-4">${{ sale.total.toFixed(2) }}</td>
-            <td class="px-6 py-4">{{ sale.saleDate }}</td>
+            <td class="px-6 py4">${{ sale.total.toFixed(2) }}</td>
+            <td class="px-6 py-4">{{ sale.saleDate.split('T')[0] }}</td>
+            <td class="px-6 py-4">
+              <button @click="viewInvoice(sale.id)"
+                class="px-3 py-1 rounded-lg text-white text-xs"
+                style="background-color:#213141">
+                🧾 {{ $t('sales.view_invoice') }}
+              </button>
+            </td>
+          </tr>
+          <tr v-if="sales.length === 0">
+            <td colspan="6" class="px-6 py-8 text-center text-gray-400">{{ $t('sales.no_sales') }}</td>
           </tr>
         </tbody>
       </table>
@@ -286,17 +406,25 @@ const triggerToast = (message, type = "success") => {
             </div>
             <p class="font-bold text-[#213141]">${{ sale.total.toFixed(2) }}</p>
           </div>
-          <div class="flex justify-between text-sm text-gray-500">
+          <div class="flex justify-between items-center text-sm text-gray-500">
             <span>{{ sale.employeeName }}</span>
-            <span>{{ sale.saleDate }}</span>
+            <span>{{ sale.saleDate.split('T')[0] }}</span>
           </div>
+          <button @click="viewInvoice(sale.id)"
+            class="mt-2 w-full py-1 rounded-lg text-white text-xs"
+            style="background-color:#213141">
+            🧾 {{ $t('sales.view_invoice') }}
+          </button>
+        </div>
+        <div v-if="sales.length === 0" class="p-6 text-center text-gray-400 text-sm">
+          {{ $t('sales.no_sales') }}
         </div>
       </div>
     </div>
 
   </div>
 
-  <!-- Cart Modal (solo móvil) -->
+  <!-- Cart Modal móvil -->
   <div v-if="showCart" class="fixed inset-0 bg-black/50 flex items-end justify-center z-50 lg:hidden">
     <div class="bg-white rounded-t-2xl w-full p-6 max-h-[85vh] overflow-y-auto">
       <div class="flex justify-between items-center mb-4">
@@ -319,7 +447,7 @@ const triggerToast = (message, type = "success") => {
             <button @click="removeItem(item.productId)" class="text-red-500 text-sm">{{ $t('sales.remove') }}</button>
           </div>
         </div>
-        <div v-if="cart.length === 0" class="text-center text-gray-500 py-4">{{ $t('sales.no_products_in_cart') }}</div>
+        <div v-if="cart.length === 0" class="text-center text-gray-500 py-4">{{ $t('sales.no_products') }}</div>
       </div>
       <div class="mt-6 space-y-3">
         <div class="flex justify-between"><span>{{ $t('sales.subtotal') }}</span><span>${{ formattedTotal }}</span></div>
@@ -328,13 +456,90 @@ const triggerToast = (message, type = "success") => {
       </div>
       <button @click="completeSale" class="w-full mt-6 py-3 rounded-xl text-white font-semibold"
         style="background-color:#213141;">
-        {{ $t('sales.complete_sale') }}
+        {{ $t('sales.complete') }}
       </button>
     </div>
   </div>
 
-</template>
+  <!-- Invoice Modal -->
+  <div v-if="showInvoiceModal && currentInvoice"
+    class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
 
+      <div class="p-6 border-b" style="background-color:#2D4A5A;">
+        <div class="flex justify-between items-start">
+          <div>
+            <h2 class="text-xl font-bold text-white">♜ StrongChess POS</h2>
+            <p class="text-sm mt-1" style="color:#bef1dd">{{ $t('sales.invoice_label') }}</p>
+          </div>
+          <div class="text-right">
+            <p class="text-white font-bold">{{ currentInvoice.voucherSerie }}-{{ currentInvoice.voucherNumber }}</p>
+            <p class="text-sm" style="color:#bef1dd">{{ currentInvoice.saleDate.split('T')[0] }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-6 space-y-4">
+        <div class="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <p class="text-gray-400">{{ $t('sales.customer') }}</p>
+            <p class="font-medium text-[#213141]">{{ currentInvoice.customerName }}</p>
+          </div>
+          <div>
+            <p class="text-gray-400">{{ $t('sales.employee') }}</p>
+            <p class="font-medium text-[#213141]">{{ currentInvoice.employeeName }}</p>
+          </div>
+        </div>
+
+        <table class="w-full text-sm mt-4">
+          <thead>
+            <tr class="border-b" style="color:#2D4A5A">
+              <th class="text-left py-2">{{ $t('sales.product') }}</th>
+              <th class="text-center py-2">{{ $t('sales.qty') }}</th>
+              <th class="text-right py-2">{{ $t('sales.unit_price') }}</th>
+              <th class="text-right py-2">{{ $t('sales.subtotal') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="item in currentInvoice.items" :key="item.productName" class="border-b">
+              <td class="py-2">{{ item.productName }}</td>
+              <td class="text-center py-2">{{ item.units }}</td>
+              <td class="text-right py-2">${{ Number(item.salePrice).toFixed(2) }}</td>
+              <td class="text-right py-2">${{ (item.salePrice * item.units - (item.discount || 0)).toFixed(2) }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="border-t pt-4">
+          <div class="flex justify-between text-sm text-gray-500">
+            <span>{{ $t('sales.subtotal') }}</span><span>${{ Number(currentInvoice.total).toFixed(2) }}</span>
+          </div>
+          <div class="flex justify-between text-sm text-gray-500 mt-1">
+            <span>{{ $t('sales.tax') }}</span><span>$0.00</span>
+          </div>
+          <div class="flex justify-between text-lg font-bold mt-2" style="color:#213141">
+            <span>{{ $t('sales.total') }}</span><span>${{ Number(currentInvoice.total).toFixed(2) }}</span>
+          </div>
+        </div>
+
+        <p class="text-center text-xs text-gray-400 mt-4">{{ $t('sales.thank_you') }}</p>
+      </div>
+
+      <div class="px-6 pb-6 flex gap-3">
+        <button @click="showInvoiceModal = false" class="flex-1 py-2 border rounded-xl text-sm">
+          {{ $t('common.close') }}
+        </button>
+        <button @click="downloadInvoicePDF"
+          class="flex-1 py-2 rounded-xl text-white text-sm font-medium"
+          style="background-color:#dc2626">
+          📄 {{ $t('sales.download_pdf') }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</template>
 <style scoped>
 .toast-enter-active, .toast-leave-active { transition: all 0.3s ease; }
 .toast-enter-from { opacity: 0; transform: translateX(100%); }
