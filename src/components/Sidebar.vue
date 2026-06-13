@@ -29,37 +29,42 @@ const navigate = (path) => {
 
       <button @click="navigate('/')"
         class="w-full text-left p-3 rounded-lg hover:bg-slate-100 hover:text-black transition">
-        Dashboard
+        {{ $t('nav.dashboard') }}
       </button>
 
       <button @click="navigate('/products')"
         class="w-full text-left p-3 rounded-lg hover:bg-slate-100 hover:text-black transition">
-        Products
+        {{ $t('nav.products') }}
       </button>
 
       <button @click="navigate('/inventory')"
         class="w-full text-left p-3 rounded-lg hover:bg-slate-100 hover:text-black transition">
-        Inventory
+        {{ $t('nav.inventory') }}
       </button>
 
       <button @click="navigate('/sales')"
         class="w-full text-left p-3 rounded-lg hover:bg-slate-100 hover:text-black transition">
-        Sales
+        {{ $t('nav.sales') }}
       </button>
 
       <button @click="navigate('/customers')"
         class="w-full text-left p-3 rounded-lg hover:bg-slate-100 hover:text-black transition">
-        Customers
+        {{ $t('nav.customers') }}
+      </button>
+
+      <button @click="navigate('/debts')"
+        class="w-full text-left p-3 rounded-lg hover:bg-slate-100 hover:text-black transition">
+        {{ $t('nav.debts') }}
       </button>
 
       <button @click="navigate('/reports')"
         class="w-full text-left p-3 rounded-lg hover:bg-slate-100 hover:text-black transition">
-        Reports
+        {{ $t('nav.reports') }}
       </button>
 
       <button v-if="isAdmin" @click="navigate('/users')"
         class="w-full text-left p-3 rounded-lg hover:bg-slate-100 hover:text-black transition">
-        Users
+        {{ $t('nav.users') }}
       </button>
     </nav>
 

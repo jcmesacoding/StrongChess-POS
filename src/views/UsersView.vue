@@ -1,7 +1,10 @@
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import authService from '../services/authService'
 import userService from '../services/userService'
+
+const { t } = useI18n();
 
 const users = ref([])
 const showModal = ref(false)
@@ -105,13 +108,13 @@ onMounted(() => { loadUsers() })
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl lg:text-3xl font-bold text-[#213141]">Users</h1>
-        <p class="text-gray-600 text-sm lg:text-base">Manage system users and roles</p>
+        <h1 class="text-2xl lg:text-3xl font-bold text-[#213141]">{{ $t('users.title') }}</h1>
+        <p class="text-gray-600 text-sm lg:text-base">{{ $t('users.subtitle') }}</p>
       </div>
       <button @click="showModal = true; resetForm()"
         class="px-3 py-2 lg:px-5 lg:py-3 rounded-xl text-white font-medium text-sm lg:text-base"
         style="background-color:#213141;">
-        + Add User
+        {{ $t('users.add') }}
       </button>
     </div>
 
@@ -124,17 +127,17 @@ onMounted(() => { loadUsers() })
     <!-- Stats -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-6">
       <div class="bg-white rounded-xl shadow-sm p-4 lg:p-5">
-        <p class="text-gray-500 text-sm">Total Users</p>
+        <p class="text-gray-500 text-sm">{{ $t('users.total') }}</p>
         <h2 class="text-2xl font-bold text-[#213141]">{{ users.length }}</h2>
       </div>
       <div class="bg-white rounded-xl shadow-sm p-4 lg:p-5">
-        <p class="text-gray-500 text-sm">Admins</p>
+        <p class="text-gray-500 text-sm">{{ $t('users.admins') }}</p>
         <h2 class="text-2xl font-bold text-[#213141]">
           {{ users.filter(u => u.roles.includes('ADMIN')).length }}
         </h2>
       </div>
       <div class="bg-white rounded-xl shadow-sm p-4 lg:p-5">
-        <p class="text-gray-500 text-sm">Employees</p>
+        <p class="text-gray-500 text-sm">{{ $t('users.employees') }}</p>
         <h2 class="text-2xl font-bold text-[#213141]">
           {{ users.filter(u => !u.roles.includes('ADMIN')).length }}
         </h2>
@@ -144,17 +147,17 @@ onMounted(() => { loadUsers() })
     <!-- Tabla desktop -->
     <div class="hidden lg:block bg-white rounded-xl shadow-sm overflow-hidden">
       <div class="px-6 py-4 border-b" style="background-color:#bef1dd;">
-        <h2 class="font-semibold text-[#213141]">User List</h2>
+        <h2 class="font-semibold text-[#213141]">{{ $t('users.list') }}</h2>
       </div>
       <table class="w-full">
         <thead>
           <tr class="border-b">
-            <th class="text-left px-6 py-4">Username</th>
-            <th class="text-left px-6 py-4">Name</th>
-            <th class="text-left px-6 py-4">Email</th>
-            <th class="text-left px-6 py-4">Role</th>
-            <th class="text-left px-6 py-4">Status</th>
-            <th class="text-left px-6 py-4">Actions</th>
+            <th class="text-left px-6 py-4">{{ $t('users.username') }}</th>
+            <th class="text-left px-6 py-4">{{ $t('users.name') }}</th>
+            <th class="text-left px-6 py-4">{{ $t('users.email') }}</th>
+            <th class="text-left px-6 py-4">{{ $t('users.role') }}</th>
+            <th class="text-left px-6 py-4">{{ $t('common.status') }}</th>
+            <th class="text-left px-6 py-4">{{ $t('common.actions') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -191,7 +194,7 @@ onMounted(() => { loadUsers() })
     <!-- Cards móvil -->
     <div class="lg:hidden space-y-3">
       <div class="px-1 py-2">
-        <h2 class="font-semibold text-[#213141]">User List</h2>
+        <h2 class="font-semibold text-[#213141]">{{ $t('users.list') }}</h2>
       </div>
       <div v-for="user in users" :key="user.id"
         class="bg-white rounded-xl shadow-sm p-4">
@@ -213,7 +216,7 @@ onMounted(() => { loadUsers() })
             </span>
             <span class="px-2 py-1 rounded-full text-xs block"
               :class="user.enabled ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'">
-              {{ user.enabled ? 'Active' : 'Inactive' }}
+              {{ user.enabled ? $t('users.active') : $t('users.inactive') }}
             </span>
           </div>
         </div>
@@ -231,46 +234,46 @@ onMounted(() => { loadUsers() })
     <div class="bg-white rounded-2xl shadow-xl p-5 lg:p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
 
       <div class="flex justify-between items-center mb-5">
-        <h2 class="text-xl font-bold text-[#213141]">{{ isEditing ? 'Edit User' : 'New User' }}</h2>
+        <h2 class="text-xl font-bold text-[#213141]">{{ isEditing ? $t('users.edit') : $t('users.new') }}</h2>
         <button @click="showModal = false; resetForm()" class="text-2xl text-gray-400 hover:text-gray-600">✕</button>
       </div>
 
       <div class="space-y-3">
         <div>
-          <label class="block mb-1 font-medium text-sm">Username</label>
+          <label class="block mb-1 font-medium text-sm">{{ $t('users.username') }}</label>
           <input v-model="form.username" placeholder="e.g. john01"
             class="w-full border rounded-lg px-3 py-2 text-sm" />
         </div>
         <div>
           <label class="block mb-1 font-medium text-sm">
-            Password {{ isEditing ? '(leave blank to keep current)' : '' }}
+            {{ $t('users.password') }} {{ isEditing ? '(leave blank to keep current)' : '' }}
           </label>
           <input v-model="form.password" type="password" placeholder="Min 6 characters"
             class="w-full border rounded-lg px-3 py-2 text-sm" />
         </div>
         <div>
-          <label class="block mb-1 font-medium text-sm">Email</label>
+          <label class="block mb-1 font-medium text-sm">{{ $t('users.email') }}</label>
           <input v-model="form.email" type="email" placeholder="email@example.com"
             class="w-full border rounded-lg px-3 py-2 text-sm" />
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block mb-1 font-medium text-sm">First Name</label>
+            <label class="block mb-1 font-medium text-sm">{{ $t('users.first_name') }}</label>
             <input v-model="form.firstName" placeholder="First name"
               class="w-full border rounded-lg px-3 py-2 text-sm" />
           </div>
           <div>
-            <label class="block mb-1 font-medium text-sm">Last Name</label>
+            <label class="block mb-1 font-medium text-sm">{{ $t('users.last_name') }}</label>
             <input v-model="form.lastName" placeholder="Last name"
               class="w-full border rounded-lg px-3 py-2 text-sm" />
           </div>
         </div>
         <div>
-          <label class="block mb-1 font-medium text-sm">Role</label>
+          <label class="block mb-1 font-medium text-sm">{{ $t('users.role') }}</label>
           <select v-model="form.role" class="w-full border rounded-lg px-3 py-2 text-sm">
-            <option value="ADMIN">ADMIN - Full access</option>
-            <option value="WRITE">WRITE - Supervisor</option>
-            <option value="READ">READ - Employee</option>
+            <option value="ADMIN">{{ $t('users.role_admin') }}</option>
+            <option value="WRITE">{{ $t('users.role_write') }}</option>
+            <option value="READ">{{ $t('users.role_read') }}</option>
           </select>
         </div>
 
@@ -282,11 +285,11 @@ onMounted(() => { loadUsers() })
 
       <div class="flex justify-end gap-3 mt-5">
         <button @click="showModal = false; resetForm()" class="px-4 py-2 border rounded-lg text-sm">
-          Cancel
+          {{ $t('users.cancel') }}
         </button>
         <button @click="saveUser" class="px-4 py-2 rounded-lg text-white text-sm"
           style="background-color:#213141">
-          {{ isEditing ? 'Update User' : 'Create User' }}
+          {{ isEditing ? $t('users.update') : $t('users.create') }}
         </button>
       </div>
 
@@ -296,11 +299,11 @@ onMounted(() => { loadUsers() })
   <!-- Delete Modal -->
   <div v-if="showDeleteModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 px-4">
     <div class="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
-      <h2 class="text-xl font-bold text-[#213141] mb-4">Delete User</h2>
-      <p class="text-gray-600 mb-6">Are you sure you want to delete this user?</p>
+      <h2 class="text-xl font-bold text-[#213141] mb-4">{{ $t('users.delete_title') }}</h2>
+      <p class="text-gray-600 mb-6">{{ $t('users.delete_confirm') }}</p>
       <div class="flex justify-end gap-3">
-        <button @click="showDeleteModal = false" class="px-4 py-2 border rounded-lg text-sm">Cancel</button>
-        <button @click="deleteUser" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm">Delete</button>
+        <button @click="showDeleteModal = false" class="px-4 py-2 border rounded-lg text-sm">{{ $t('users.cancel') }}</button>
+        <button @click="deleteUser" class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm">{{ $t('users.delete') }}</button>
       </div>
     </div>
   </div>

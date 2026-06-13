@@ -2,6 +2,15 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Sidebar from '../components/Sidebar.vue'
+import { useI18n } from 'vue-i18n'
+
+const { locale } = useI18n()
+const { t } = useI18n()
+
+const toggleLanguage = () => {
+  locale.value = locale.value === 'en' ? 'es' : 'en'
+  localStorage.setItem('language', locale.value)
+}
 
 const route = useRoute()
 const router = useRouter()
@@ -82,7 +91,13 @@ const logout = () => {
             border-color: #21314130;
             color: #213141;
             ">
-            Logout
+            {{ $t('common.logout') }}
+          </button>
+          <!-- Language toggle -->
+          <button @click="toggleLanguage"
+            class="px-3 py-2 rounded-lg border text-sm font-medium transition hover:opacity-80"
+            style="background-color: white; border-color: #21314130; color: #213141;">
+            {{ locale === 'en' ? 'ES | 🇪n' : '🇪🇸 | En' }}
           </button>
         </div>
 
@@ -101,21 +116,21 @@ const logout = () => {
     <div class="bg-white rounded-2xl shadow-xl p-6 w-full max-w-md">
 
       <h2 class="text-xl font-bold mb-3" style="color: #213141;">
-        Logout
+        {{ $t('common.logout') }}
       </h2>
 
       <p class="text-gray-600 mb-6">
-        Are you sure you want to logout?
+        {{ $t('logout.confirm') }}
       </p>
 
       <div class="flex justify-end gap-3">
 
         <button @click="showLogoutModal = false" class="px-4 py-2 border rounded-lg">
-          Cancel
+          {{ $t('common.cancel') }}
         </button>
 
         <button @click="logout" class="px-4 py-2 rounded-lg text-white" style="background-color: #dc2626;">
-          Logout
+          {{ $t('common.logout') }}
         </button>
 
       </div>

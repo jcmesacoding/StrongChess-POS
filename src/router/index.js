@@ -7,6 +7,7 @@ import SalesView from "../views/SalesView.vue";
 import CustomersView from "../views/CustomersView.vue";
 import ReportsView from "../views/ReportsView.vue";
 import LoginView from "../views/LoginView.vue";
+import DebtsView from "../views/DebtsView.vue";
 
 const routes = [
   {
@@ -52,6 +53,11 @@ const routes = [
     path: "/customers",
     name: "customers",
     component: CustomersView,
+  },
+  {
+    path: "/debts",
+    name: "debts",
+    component: DebtsView,
   },
   {
     path: "/reports",

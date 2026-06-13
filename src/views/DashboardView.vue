@@ -1,5 +1,6 @@
 <script setup>
 import { ref, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
 import dashboardService from "../services/dashboardService";
 import { Bar, Line } from "vue-chartjs";
 import {
@@ -25,6 +26,8 @@ ChartJS.register(
   Legend
 );
 
+const { t } = useI18n();
+
 const dashboardData = ref({
   totalProducts: 0,
   totalCustomers: 0,
@@ -42,9 +45,7 @@ const topProductsChart = ref({ labels: [], datasets: [] });
 const chartOptions = {
   responsive: true,
   maintainAspectRatio: false,
-  plugins: {
-    legend: { display: false }
-  }
+  plugins: { legend: { display: false } }
 };
 
 const loadDashboardData = async () => {
@@ -65,37 +66,17 @@ const loadCharts = async () => {
 
     salesByDayChart.value = {
       labels: dayRes.data.map(d => d.day),
-      datasets: [{
-        label: 'Sales',
-        data: dayRes.data.map(d => d.total),
-        backgroundColor: '#2D4A5A',
-        borderRadius: 6
-      }]
+      datasets: [{ label: t('dashboard.sales_last_7_days'), data: dayRes.data.map(d => d.total), backgroundColor: '#2D4A5A', borderRadius: 6 }]
     };
 
     salesByMonthChart.value = {
       labels: monthRes.data.map(d => d.month),
-      datasets: [{
-        label: 'Revenue',
-        data: monthRes.data.map(d => d.total),
-        borderColor: '#213141',
-        backgroundColor: '#bef1dd',
-        tension: 0.4,
-        fill: true
-      }]
+      datasets: [{ label: t('dashboard.revenue_this_year'), data: monthRes.data.map(d => d.total), borderColor: '#213141', backgroundColor: '#bef1dd', tension: 0.4, fill: true }]
     };
 
     topProductsChart.value = {
       labels: topRes.data.map(d => d.name),
-      datasets: [{
-        label: 'Units Sold',
-        data: topRes.data.map(d => d.totalSold),
-        backgroundColor: [
-          '#2D4A5A', '#3d6b82', '#4e8ca9',
-          '#bef1dd', '#91e0c0'
-        ],
-        borderRadius: 6
-      }]
+      datasets: [{ label: t('dashboard.top_products'), data: topRes.data.map(d => d.totalSold), backgroundColor: ['#2D4A5A', '#3d6b82', '#4e8ca9', '#bef1dd', '#91e0c0'], borderRadius: 6 }]
     };
 
   } catch (error) {
@@ -114,32 +95,32 @@ onMounted(async () => {
 
     <!-- Header -->
     <div>
-      <h1 class="text-2xl lg:text-3xl font-bold text-[#213141]">Dashboard</h1>
-      <p class="text-gray-600 text-sm lg:text-base">Welcome back! Here's what's happening in your business today.</p>
+      <h1 class="text-2xl lg:text-3xl font-bold text-[#213141]">{{ $t('dashboard.title') }}</h1>
+      <p class="text-gray-600 text-sm lg:text-base">{{ $t('dashboard.subtitle') }}</p>
     </div>
 
     <!-- KPI Cards -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
       <div class="bg-white rounded-xl shadow-sm p-4 lg:p-5">
-        <p class="text-gray-500 text-sm">Inventory Value</p>
+        <p class="text-gray-500 text-sm">{{ $t('dashboard.inventory_value') }}</p>
         <h2 class="text-2xl lg:text-3xl font-bold text-green-600 mt-1 lg:mt-2">
           ${{ dashboardData.inventoryValue?.toFixed(2) ?? '0.00' }}
         </h2>
       </div>
       <div class="bg-white rounded-xl shadow-sm p-4 lg:p-5">
-        <p class="text-gray-500 text-sm">Total Sales</p>
+        <p class="text-gray-500 text-sm">{{ $t('dashboard.total_sales') }}</p>
         <h2 class="text-2xl lg:text-3xl font-bold text-[#213141] mt-1 lg:mt-2">
           {{ dashboardData.totalSales }}
         </h2>
       </div>
       <div class="bg-white rounded-xl shadow-sm p-4 lg:p-5">
-        <p class="text-gray-500 text-sm">Products</p>
+        <p class="text-gray-500 text-sm">{{ $t('dashboard.products') }}</p>
         <h2 class="text-2xl lg:text-3xl font-bold text-[#213141] mt-1 lg:mt-2">
           {{ dashboardData.totalProducts }}
         </h2>
       </div>
       <div class="bg-white rounded-xl shadow-sm p-4 lg:p-5">
-        <p class="text-gray-500 text-sm">Customers</p>
+        <p class="text-gray-500 text-sm">{{ $t('dashboard.customers') }}</p>
         <h2 class="text-2xl lg:text-3xl font-bold text-[#213141] mt-1 lg:mt-2">
           {{ dashboardData.totalCustomers }}
         </h2>
@@ -148,33 +129,22 @@ onMounted(async () => {
 
     <!-- Charts Row 1 -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-
-      <!-- Sales by Day -->
       <div class="bg-white rounded-xl shadow-sm p-4 lg:p-6">
-        <h2 class="font-semibold text-[#213141] mb-4">Sales Last 7 Days</h2>
+        <h2 class="font-semibold text-[#213141] mb-4">{{ $t('dashboard.sales_last_7_days') }}</h2>
         <div class="h-48 lg:h-64">
-          <Bar
-            v-if="salesByDayChart.labels.length > 0"
-            :data="salesByDayChart"
-            :options="chartOptions"
-          />
+          <Bar v-if="salesByDayChart.labels.length > 0" :data="salesByDayChart" :options="chartOptions" />
           <div v-else class="h-full flex items-center justify-center text-gray-400 text-sm">
-            No sales data yet
+            {{ $t('dashboard.no_data') }}
           </div>
         </div>
       </div>
 
-      <!-- Sales by Month -->
       <div class="bg-white rounded-xl shadow-sm p-4 lg:p-6">
-        <h2 class="font-semibold text-[#213141] mb-4">Revenue This Year</h2>
+        <h2 class="font-semibold text-[#213141] mb-4">{{ $t('dashboard.revenue_this_year') }}</h2>
         <div class="h-48 lg:h-64">
-          <Line
-            v-if="salesByMonthChart.labels.length > 0"
-            :data="salesByMonthChart"
-            :options="chartOptions"
-          />
+          <Line v-if="salesByMonthChart.labels.length > 0" :data="salesByMonthChart" :options="chartOptions" />
           <div v-else class="h-full flex items-center justify-center text-gray-400 text-sm">
-            No sales data yet
+            {{ $t('dashboard.no_data') }}
           </div>
         </div>
       </div>
@@ -182,37 +152,29 @@ onMounted(async () => {
 
     <!-- Charts Row 2 + Low Stock -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
-
-      <!-- Top Products -->
       <div class="lg:col-span-2 bg-white rounded-xl shadow-sm p-4 lg:p-6">
-        <h2 class="font-semibold text-[#213141] mb-4">Top Products</h2>
+        <h2 class="font-semibold text-[#213141] mb-4">{{ $t('dashboard.top_products') }}</h2>
         <div class="h-48 lg:h-64">
-          <Bar
-            v-if="topProductsChart.labels.length > 0"
-            :data="topProductsChart"
-            :options="chartOptions"
-          />
+          <Bar v-if="topProductsChart.labels.length > 0" :data="topProductsChart" :options="chartOptions" />
           <div v-else class="h-full flex items-center justify-center text-gray-400 text-sm">
-            No sales data yet
+            {{ $t('dashboard.no_data') }}
           </div>
         </div>
       </div>
 
-      <!-- Low Stock -->
       <div class="bg-white rounded-xl shadow-sm p-4 lg:p-6">
-        <h2 class="font-semibold text-[#213141] mb-4">Low Stock Alert</h2>
+        <h2 class="font-semibold text-[#213141] mb-4">{{ $t('dashboard.low_stock_alert') }}</h2>
         <div v-if="dashboardData.lowStockProducts.length > 0" class="space-y-3">
           <div v-for="product in dashboardData.lowStockProducts" :key="product.id"
             class="flex justify-between text-sm lg:text-base">
             <span>{{ product.name }}</span>
-            <span class="font-bold"
-              :class="product.currentStock === 0 ? 'text-red-500' : 'text-orange-500'">
+            <span class="font-bold" :class="product.currentStock === 0 ? 'text-red-500' : 'text-orange-500'">
               {{ product.currentStock }}
             </span>
           </div>
         </div>
         <div v-else class="text-center py-6 text-gray-400 text-sm">
-          All products well stocked
+          {{ $t('dashboard.all_stocked') }}
         </div>
       </div>
     </div>
@@ -220,15 +182,15 @@ onMounted(async () => {
     <!-- Recent Sales -->
     <div class="bg-white rounded-xl shadow-sm overflow-hidden">
       <div class="px-6 py-4 border-b" style="background-color:#bef1dd;">
-        <h2 class="font-semibold text-[#213141]">Recent Sales</h2>
+        <h2 class="font-semibold text-[#213141]">{{ $t('dashboard.recent_sales') }}</h2>
       </div>
       <table class="hidden lg:table w-full">
         <thead>
           <tr class="border-b">
-            <th class="text-left px-6 py-4">Invoice</th>
-            <th class="text-left px-6 py-4">Customer</th>
-            <th class="text-left px-6 py-4">Amount</th>
-            <th class="text-left px-6 py-4">Date</th>
+            <th class="text-left px-6 py-4">{{ $t('dashboard.invoice') }}</th>
+            <th class="text-left px-6 py-4">{{ $t('dashboard.customer') }}</th>
+            <th class="text-left px-6 py-4">{{ $t('dashboard.amount') }}</th>
+            <th class="text-left px-6 py-4">{{ $t('dashboard.date') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -239,7 +201,7 @@ onMounted(async () => {
             <td class="px-6 py-4">{{ sale.saleDate }}</td>
           </tr>
           <tr v-if="dashboardData.recentSales.length === 0">
-            <td colspan="4" class="px-6 py-8 text-center text-gray-400">No sales yet</td>
+            <td colspan="4" class="px-6 py-8 text-center text-gray-400">{{ $t('dashboard.no_sales') }}</td>
           </tr>
         </tbody>
       </table>
@@ -257,7 +219,7 @@ onMounted(async () => {
         </div>
         <div v-if="dashboardData.recentSales.length === 0"
           class="p-6 text-center text-gray-400 text-sm">
-          No sales yet
+          {{ $t('dashboard.no_sales') }}
         </div>
       </div>
     </div>

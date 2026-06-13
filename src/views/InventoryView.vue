@@ -1,8 +1,11 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import productService from '../services/productService'
 import inventoryMovementService from '../services/inventoryMovementService'
 import InventoryMovementModal from '../components/InventoryMovementModal.vue'
+
+const { t } = useI18n()
 
 const products = ref([])
 const search = ref("")
@@ -31,8 +34,7 @@ const saveMovement = async (data) => {
 
 const loadProducts = async () => {
   try {
-    const response = await productService.getAll()
-    products.value = response.data
+    products.value = (await productService.getAll()).data
   } catch (error) {
     console.error(error)
   }
@@ -40,8 +42,7 @@ const loadProducts = async () => {
 
 const loadMovements = async () => {
   try {
-    const response = await inventoryMovementService.findAll()
-    movements.value = response.data
+    movements.value = (await inventoryMovementService.findAll()).data
   } catch (error) {
     console.error("Error loading movements", error)
   }
@@ -84,26 +85,24 @@ const formatDate = (date) => new Date(date).toLocaleString()
     <!-- Header -->
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
       <div>
-        <h1 class="text-2xl lg:text-3xl font-bold text-[#213141]">Inventory</h1>
-        <p class="text-gray-600 text-sm lg:text-base">Manage stock levels and inventory movements</p>
+        <h1 class="text-2xl lg:text-3xl font-bold text-[#213141]">{{ $t('inventory.title') }}</h1>
+        <p class="text-gray-600 text-sm lg:text-base">{{ $t('inventory.subtitle') }}</p>
       </div>
-
-      <!-- Botones en móvil: grid 2x2, en desktop: fila -->
       <div class="grid grid-cols-2 lg:flex gap-2 lg:gap-3">
         <button @click="openMovementModal('ENTRY')"
           class="px-3 py-2 lg:px-5 lg:py-3 rounded-xl text-white font-medium text-sm lg:text-base"
           style="background-color: #213141;">
-          + Entry
+          {{ $t('inventory.entry') }}
         </button>
         <button @click="openMovementModal('OUTPUT')"
           class="px-3 py-2 lg:px-5 lg:py-3 rounded-xl text-white text-sm lg:text-base"
           style="background-color:#a22111">
-          - Output
+          {{ $t('inventory.output') }}
         </button>
         <button @click="openMovementModal('ADJUSTMENT')"
           class="col-span-2 lg:col-span-1 px-3 py-2 lg:px-5 lg:py-3 rounded-xl font-medium border text-sm lg:text-base"
           style="background-color: #bef1dd; border-color: #21314130; color: #213141;">
-          Stock Adjustment
+          {{ $t('inventory.adjustment') }}
         </button>
       </div>
     </div>
@@ -111,52 +110,52 @@ const formatDate = (date) => new Date(date).toLocaleString()
     <!-- Stats -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
       <div class="bg-white rounded-xl shadow-sm p-4 lg:p-5">
-        <p class="text-gray-500 text-sm">Units in Stock</p>
+        <p class="text-gray-500 text-sm">{{ $t('inventory.units_in_stock') }}</p>
         <h2 class="text-2xl lg:text-3xl font-bold text-[#213141]">{{ totalStock }}</h2>
       </div>
       <div class="bg-white rounded-xl shadow-sm p-4 lg:p-5">
-        <p class="text-gray-500 text-sm">Low Stock</p>
+        <p class="text-gray-500 text-sm">{{ $t('inventory.low_stock') }}</p>
         <h2 class="text-2xl lg:text-3xl font-bold text-orange-500">{{ lowStock }}</h2>
       </div>
       <div class="bg-white rounded-xl shadow-sm p-4 lg:p-5">
-        <p class="text-gray-500 text-sm">Out of Stock</p>
+        <p class="text-gray-500 text-sm">{{ $t('inventory.out_of_stock') }}</p>
         <h2 class="text-2xl lg:text-3xl font-bold text-red-500">{{ outOfStock }}</h2>
       </div>
       <div class="bg-white rounded-xl shadow-sm p-4 lg:p-5">
-        <p class="text-gray-500 text-sm">Movements Today</p>
-        <h2 class="text-2xl lg:text-3xl font-bold text-green-600">28</h2>
+        <p class="text-gray-500 text-sm">{{ $t('inventory.movements_today') }}</p>
+        <h2 class="text-2xl lg:text-3xl font-bold text-green-600">{{ movements.length }}</h2>
       </div>
     </div>
 
     <!-- Search -->
     <div class="bg-white rounded-xl shadow-sm p-4 lg:p-5">
       <div class="flex flex-col sm:flex-row gap-3">
-        <input v-model="search" type="text" placeholder="Search product..."
+        <input v-model="search" type="text" :placeholder="$t('inventory.search')"
           class="flex-1 border rounded-lg px-4 py-2 text-sm" />
         <select v-model="statusFilter" class="border rounded-lg px-4 py-2 text-sm">
-          <option>All</option>
-          <option>In Stock</option>
-          <option>Low Stock</option>
-          <option>Out of Stock</option>
+          <option value="All">{{ $t('debts.all_status') }}</option>
+          <option value="In Stock">{{ $t('inventory.in_stock') }}</option>
+          <option value="Low Stock">{{ $t('inventory.low_stock') }}</option>
+          <option value="Out of Stock">{{ $t('inventory.out_of_stock') }}</option>
         </select>
       </div>
     </div>
 
-    <!-- Current Inventory Table (desktop) -->
+    <!-- Current Inventory -->
     <div class="bg-white rounded-xl shadow-sm overflow-hidden">
       <div class="px-6 py-4 border-b" style="background-color: #bef1dd;">
-        <h2 class="font-semibold text-[#213141]">Current Inventory</h2>
+        <h2 class="font-semibold text-[#213141]">{{ $t('inventory.current_inventory') }}</h2>
       </div>
 
       <!-- Tabla desktop -->
       <table class="hidden lg:table w-full">
         <thead>
           <tr class="border-b">
-            <th class="text-left px-6 py-4">Product</th>
-            <th class="text-left px-6 py-4">SKU</th>
-            <th class="text-left px-6 py-4">Current Stock</th>
-            <th class="text-left px-6 py-4">Min Stock</th>
-            <th class="text-left px-6 py-4">Status</th>
+            <th class="text-left px-6 py-4">{{ $t('inventory.product') }}</th>
+            <th class="text-left px-6 py-4">{{ $t('products.sku') }}</th>
+            <th class="text-left px-6 py-4">{{ $t('inventory.current_stock') }}</th>
+            <th class="text-left px-6 py-4">{{ $t('inventory.min_stock') }}</th>
+            <th class="text-left px-6 py-4">{{ $t('common.status') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -167,11 +166,17 @@ const formatDate = (date) => new Date(date).toLocaleString()
             <td class="px-6 py-4">{{ product.minStock }}</td>
             <td class="px-6 py-4">
               <span v-if="product.currentStock === 0"
-                class="px-3 py-1 rounded-full text-sm bg-red-100 text-red-700">Out of Stock</span>
+                class="px-3 py-1 rounded-full text-sm bg-red-100 text-red-700">
+                {{ $t('inventory.out_of_stock') }}
+              </span>
               <span v-else-if="product.currentStock <= product.minStock"
-                class="px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-700">Low Stock</span>
+                class="px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-700">
+                {{ $t('inventory.low_stock') }}
+              </span>
               <span v-else
-                class="px-3 py-1 rounded-full text-sm bg-green-100 text-green-700">In Stock</span>
+                class="px-3 py-1 rounded-full text-sm bg-green-100 text-green-700">
+                {{ $t('inventory.in_stock') }}
+              </span>
             </td>
           </tr>
         </tbody>
@@ -183,15 +188,21 @@ const formatDate = (date) => new Date(date).toLocaleString()
           <div class="flex justify-between items-start mb-1">
             <p class="font-semibold text-[#213141]">{{ product.name }}</p>
             <span v-if="product.currentStock === 0"
-              class="px-2 py-1 rounded-full text-xs bg-red-100 text-red-700">Out of Stock</span>
+              class="px-2 py-1 rounded-full text-xs bg-red-100 text-red-700">
+              {{ $t('inventory.out_of_stock') }}
+            </span>
             <span v-else-if="product.currentStock <= product.minStock"
-              class="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700">Low Stock</span>
+              class="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-700">
+              {{ $t('inventory.low_stock') }}
+            </span>
             <span v-else
-              class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">In Stock</span>
+              class="px-2 py-1 rounded-full text-xs bg-green-100 text-green-700">
+              {{ $t('inventory.in_stock') }}
+            </span>
           </div>
           <div class="flex gap-4 text-sm text-gray-600">
-            <span>Stock: <strong>{{ product.currentStock }}</strong></span>
-            <span>Min: <strong>{{ product.minStock }}</strong></span>
+            <span>{{ $t('inventory.current_stock') }}: <strong>{{ product.currentStock }}</strong></span>
+            <span>{{ $t('inventory.min_stock') }}: <strong>{{ product.minStock }}</strong></span>
             <span>SKU: <strong>{{ product.id }}</strong></span>
           </div>
         </div>
@@ -201,17 +212,17 @@ const formatDate = (date) => new Date(date).toLocaleString()
     <!-- Recent Movements -->
     <div class="bg-white rounded-xl shadow-sm overflow-hidden">
       <div class="px-6 py-4 border-b" style="background-color: #bef1dd;">
-        <h2 class="font-semibold text-[#213141]">Recent Movements</h2>
+        <h2 class="font-semibold text-[#213141]">{{ $t('inventory.recent_movements') }}</h2>
       </div>
 
       <!-- Tabla desktop -->
       <table class="hidden lg:table w-full">
         <thead>
           <tr class="border-b">
-            <th class="text-left px-6 py-4">Date</th>
-            <th class="text-left px-6 py-4">Product</th>
-            <th class="text-left px-6 py-4">Type</th>
-            <th class="text-left px-6 py-4">Quantity</th>
+            <th class="text-left px-6 py-4">{{ $t('inventory.date') }}</th>
+            <th class="text-left px-6 py-4">{{ $t('inventory.product') }}</th>
+            <th class="text-left px-6 py-4">{{ $t('inventory.type') }}</th>
+            <th class="text-left px-6 py-4">{{ $t('inventory.quantity') }}</th>
           </tr>
         </thead>
         <tbody>

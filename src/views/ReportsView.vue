@@ -1,6 +1,9 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
+import { useI18n } from 'vue-i18n'
 import salesService from "../services/salesService";
+
+const { t } = useI18n();
 
 const sales = ref([]);
 const startDate = ref("");
@@ -39,19 +42,19 @@ onMounted(loadSales);
 
     <!-- Header -->
     <div>
-      <h1 class="text-2xl lg:text-3xl font-bold text-[#213141]">Reports</h1>
-      <p class="text-gray-600 text-sm lg:text-base">Sales analytics</p>
+      <h1 class="text-2xl lg:text-3xl font-bold text-[#213141]">{{ $t('reports.title') }}</h1>
+      <p class="text-gray-600 text-sm lg:text-base">{{ $t('reports.subtitle') }}</p>
     </div>
 
     <!-- Date filters -->
     <div class="bg-white rounded-xl shadow-sm p-4 lg:p-5">
       <div class="flex flex-col sm:flex-row gap-3">
         <div class="flex-1">
-          <label class="block text-sm text-gray-500 mb-1">Start Date</label>
+          <label class="block text-sm text-gray-500 mb-1">{{ $t('reports.start_date') }}</label>
           <input v-model="startDate" type="date" class="w-full border rounded-xl px-4 py-2 text-sm" />
         </div>
         <div class="flex-1">
-          <label class="block text-sm text-gray-500 mb-1">End Date</label>
+          <label class="block text-sm text-gray-500 mb-1">{{ $t('reports.end_date') }}</label>
           <input v-model="endDate" type="date" class="w-full border rounded-xl px-4 py-2 text-sm" />
         </div>
       </div>
@@ -60,15 +63,15 @@ onMounted(loadSales);
     <!-- Stats -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-5">
       <div class="bg-white p-4 lg:p-5 rounded-xl shadow-sm flex sm:block justify-between items-center">
-        <p class="text-gray-500 text-sm">Revenue</p>
+        <p class="text-gray-500 text-sm">{{ $t('reports.revenue') }}</p>
         <h2 class="text-2xl lg:text-3xl font-bold text-[#213141]">${{ totalRevenue.toFixed(2) }}</h2>
       </div>
       <div class="bg-white p-4 lg:p-5 rounded-xl shadow-sm flex sm:block justify-between items-center">
-        <p class="text-gray-500 text-sm">Sales</p>
+        <p class="text-gray-500 text-sm">{{ $t('reports.sales') }}</p>
         <h2 class="text-2xl lg:text-3xl font-bold text-[#213141]">{{ filteredSales.length }}</h2>
       </div>
       <div class="bg-white p-4 lg:p-5 rounded-xl shadow-sm flex sm:block justify-between items-center">
-        <p class="text-gray-500 text-sm">Average</p>
+        <p class="text-gray-500 text-sm">{{ $t('reports.average') }}</p>
         <h2 class="text-2xl lg:text-3xl font-bold text-[#213141]">${{ averageSale.toFixed(2) }}</h2>
       </div>
     </div>
@@ -76,16 +79,16 @@ onMounted(loadSales);
     <!-- Tabla desktop -->
     <div class="hidden lg:block bg-white rounded-xl shadow-sm overflow-hidden">
       <div class="px-6 py-4 border-b" style="background-color:#bef1dd;">
-        <h2 class="font-semibold text-[#213141]">Sales Detail</h2>
+        <h2 class="font-semibold text-[#213141]">{{ $t('reports.detail') }}</h2>
       </div>
       <table class="w-full">
         <thead>
           <tr class="border-b">
-            <th class="text-left p-4">Invoice</th>
-            <th class="text-left p-4">Customer</th>
-            <th class="text-left p-4">Employee</th>
-            <th class="text-left p-4">Total</th>
-            <th class="text-left p-4">Date</th>
+            <th class="text-left p-4">{{ $t('reports.invoice') }}</th>
+            <th class="text-left p-4">{{ $t('reports.customer') }}</th>
+            <th class="text-left p-4">{{ $t('reports.employee') }}</th>
+            <th class="text-left p-4">{{ $t('reports.total') }}</th>
+            <th class="text-left p-4">{{ $t('reports.date') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -103,7 +106,7 @@ onMounted(loadSales);
     <!-- Cards móvil -->
     <div class="lg:hidden space-y-3">
       <div class="px-1 py-2">
-        <h2 class="font-semibold text-[#213141]">Sales Detail</h2>
+        <h2 class="font-semibold text-[#213141]">{{ $t('reports.detail') }}</h2>
       </div>
       <div v-for="sale in filteredSales" :key="sale.id"
         class="bg-white rounded-xl shadow-sm p-4">
@@ -121,7 +124,7 @@ onMounted(loadSales);
       </div>
 
       <div v-if="filteredSales.length === 0" class="text-center py-6 text-gray-500 text-sm">
-        No sales found
+        {{ $t('reports.no_sales') }}
       </div>
     </div>
 

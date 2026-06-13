@@ -1,11 +1,14 @@
 <script setup>
 import { ref, onMounted, computed } from "vue";
+import { useI18n } from 'vue-i18n'
 import productService from "../services/productService";
 import salesService from "../services/salesService";
 import customerService from "../services/customerService";
 import employeeService from "../services/employeeService";
 import voucherTypeService from "../services/voucherTypeService";
 import ToastNotification from "../components/ToastNotification.vue";
+
+const { t } = useI18n()
 
 const products = ref([]);
 const customers = ref([]);
@@ -142,8 +145,8 @@ const triggerToast = (message, type = "success") => {
     <!-- Header -->
     <div class="flex items-center justify-between">
       <div>
-        <h1 class="text-2xl lg:text-3xl font-bold text-[#213141]">Sales</h1>
-        <p class="text-gray-600 text-sm lg:text-base">Create and manage sales transactions</p>
+        <h1 class="text-2xl lg:text-3xl font-bold text-[#213141]">{{ $t('sales.title') }}</h1>
+        <p class="text-gray-600 text-sm lg:text-base">{{ $t('sales.subtitle') }}</p>
       </div>
       <!-- Botón carrito flotante en móvil -->
       <button
@@ -151,7 +154,7 @@ const triggerToast = (message, type = "success") => {
         style="background-color:#213141"
         @click="showCart = true"
       >
-        🛒 Cart
+        🛒 {{ $t('sales.cart') }}
         <span v-if="cart.length > 0"
           class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
           {{ cart.length }}
@@ -162,19 +165,19 @@ const triggerToast = (message, type = "success") => {
     <!-- Selects -->
     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
       <select v-model="customerId" class="border rounded-lg px-4 py-3 text-sm">
-        <option value="">Select customer</option>
+        <option value="">{{ $t('sales.select_customer') }}</option>
         <option v-for="customer in customers" :key="customer.id" :value="customer.id">
           {{ customer.socialReason ? customer.socialReason : customer.firstname + ' ' + customer.lastname }}
         </option>
       </select>
       <select v-model="employeeId" class="border rounded-lg px-4 py-3 text-sm">
-        <option value="">Select Employee</option>
+        <option value="">{{ $t('sales.select_employee') }}</option>
         <option v-for="employee in employees" :key="employee.id" :value="employee.id">
           {{ employee.firstname }} {{ employee.lastname }}
         </option>
       </select>
       <select v-model="voucherTypeId" class="border rounded-lg px-4 py-3 text-sm">
-        <option value="">Select Voucher</option>
+        <option value="">{{ $t('sales.select_voucher') }}</option>
         <option v-for="voucher in voucherTypes" :key="voucher.id" :value="voucher.id">
           {{ voucher.description }}
         </option>
@@ -188,7 +191,7 @@ const triggerToast = (message, type = "success") => {
       <div class="lg:col-span-2">
         <div class="bg-white rounded-xl shadow-sm p-4 lg:p-5">
           <div class="mb-4">
-            <input v-model="search" type="text" placeholder="Search products..."
+            <input v-model="search" type="text" :placeholder="$t('sales.search_products')"
               class="w-full border rounded-lg px-4 py-3 text-sm" />
           </div>
           <div class="grid grid-cols-2 gap-3">
@@ -200,12 +203,12 @@ const triggerToast = (message, type = "success") => {
               <button @click="addToCart(product)"
                 class="mt-3 w-full py-2 rounded-lg text-white text-sm"
                 style="background-color:#213141;">
-                Add
+                {{ $t('sales.add_to_cart') }}
               </button>
             </div>
           </div>
           <div v-if="filteredProducts.length === 0" class="text-center py-6 text-gray-500 text-sm">
-            No products found
+            {{ $t('sales.no_products') }}
           </div>
         </div>
       </div>
@@ -213,7 +216,7 @@ const triggerToast = (message, type = "success") => {
       <!-- Cart desktop (oculto en móvil) -->
       <div class="hidden lg:block">
         <div class="bg-white rounded-xl shadow-sm p-5">
-          <h2 class="text-xl font-semibold mb-5 text-[#213141]">Current Sale</h2>
+          <h2 class="text-xl font-semibold mb-5 text-[#213141]">{{ $t('sales.current_sale') }}</h2>
           <div class="space-y-4">
             <div v-for="item in cart" :key="item.productId" class="flex justify-between border-b pb-3">
               <div>
@@ -227,19 +230,19 @@ const triggerToast = (message, type = "success") => {
               <div class="text-right">
                 <div>${{ item.salePrice * item.units }}</div>
                 <div class="text-xs text-gray-500">{{ item.units }} x ${{ item.salePrice }}</div>
-                <button @click="removeItem(item.productId)" class="text-red-500 text-sm">Remove</button>
+                <button @click="removeItem(item.productId)" class="text-red-500 text-sm">{{ $t('sales.remove') }}</button>
               </div>
             </div>
-            <div v-if="cart.length === 0" class="text-center text-gray-500">No products added</div>
+            <div v-if="cart.length === 0" class="text-center text-gray-500">{{ $t('sales.error_empty_cart') }}</div>
           </div>
           <div class="mt-6 space-y-3">
-            <div class="flex justify-between"><span>Subtotal</span><span>${{ formattedTotal }}</span></div>
-            <div class="flex justify-between"><span>Tax</span><span>$0.00</span></div>
-            <div class="flex justify-between text-xl font-bold"><span>Total</span><span>${{ formattedTotal }}</span></div>
+            <div class="flex justify-between"><span>{{ $t('sales.subtotal') }}</span><span>${{ formattedTotal }}</span></div>
+            <div class="flex justify-between"><span>{{ $t('sales.tax') }}</span><span>$0.00</span></div>
+            <div class="flex justify-between text-xl font-bold"><span>{{ $t('sales.total') }}</span><span>${{ formattedTotal }}</span></div>
           </div>
           <button @click="completeSale" class="w-full mt-6 py-3 rounded-xl text-white font-semibold"
             style="background-color:#213141;">
-            Complete Sale
+            {{ $t('sales.completed') }}
           </button>
         </div>
       </div>
@@ -248,18 +251,18 @@ const triggerToast = (message, type = "success") => {
     <!-- Recent Sales -->
     <div class="bg-white rounded-xl shadow-sm overflow-hidden">
       <div class="px-6 py-4 border-b" style="background-color:#bef1dd;">
-        <h2 class="font-semibold text-[#213141]">Recent Sales</h2>
+        <h2 class="font-semibold text-[#213141]">{{ $t('sales.recent_sales') }}</h2>
       </div>
 
       <!-- Tabla desktop -->
       <table class="hidden lg:table w-full">
         <thead>
           <tr class="border-b">
-            <th class="text-left px-6 py-4">Invoice</th>
-            <th class="text-left px-6 py-4">Customer</th>
-            <th class="text-left px-6 py-4">Employee</th>
-            <th class="text-left px-6 py-4">Amount</th>
-            <th class="text-left px-6 py-4">Date</th>
+            <th class="text-left px-6 py-4">{{ $t('sales.invoice') }}</th>
+            <th class="text-left px-6 py-4">{{ $t('sales.customer') }}</th>
+            <th class="text-left px-6 py-4">{{ $t('sales.employee') }}</th>
+            <th class="text-left px-6 py-4">{{ $t('sales.amount') }}</th>
+            <th class="text-left px-6 py-4">{{ $t('sales.date') }}</th>
           </tr>
         </thead>
         <tbody>
@@ -297,7 +300,7 @@ const triggerToast = (message, type = "success") => {
   <div v-if="showCart" class="fixed inset-0 bg-black/50 flex items-end justify-center z-50 lg:hidden">
     <div class="bg-white rounded-t-2xl w-full p-6 max-h-[85vh] overflow-y-auto">
       <div class="flex justify-between items-center mb-4">
-        <h2 class="text-xl font-semibold text-[#213141]">Current Sale</h2>
+        <h2 class="text-xl font-semibold text-[#213141]">{{ $t('sales.current_sale') }}</h2>
         <button @click="showCart = false" class="text-2xl">✕</button>
       </div>
       <div class="space-y-4">
@@ -313,19 +316,19 @@ const triggerToast = (message, type = "success") => {
           <div class="text-right">
             <div>${{ item.salePrice * item.units }}</div>
             <div class="text-xs text-gray-500">{{ item.units }} x ${{ item.salePrice }}</div>
-            <button @click="removeItem(item.productId)" class="text-red-500 text-sm">Remove</button>
+            <button @click="removeItem(item.productId)" class="text-red-500 text-sm">{{ $t('sales.remove') }}</button>
           </div>
         </div>
-        <div v-if="cart.length === 0" class="text-center text-gray-500 py-4">No products added</div>
+        <div v-if="cart.length === 0" class="text-center text-gray-500 py-4">{{ $t('sales.no_products_in_cart') }}</div>
       </div>
       <div class="mt-6 space-y-3">
-        <div class="flex justify-between"><span>Subtotal</span><span>${{ formattedTotal }}</span></div>
-        <div class="flex justify-between"><span>Tax</span><span>$0.00</span></div>
-        <div class="flex justify-between text-xl font-bold"><span>Total</span><span>${{ formattedTotal }}</span></div>
+        <div class="flex justify-between"><span>{{ $t('sales.subtotal') }}</span><span>${{ formattedTotal }}</span></div>
+        <div class="flex justify-between"><span>{{ $t('sales.tax') }}</span><span>$0.00</span></div>
+        <div class="flex justify-between text-xl font-bold"><span>{{ $t('sales.total') }}</span><span>${{ formattedTotal }}</span></div>
       </div>
       <button @click="completeSale" class="w-full mt-6 py-3 rounded-xl text-white font-semibold"
         style="background-color:#213141;">
-        Complete Sale
+        {{ $t('sales.complete_sale') }}
       </button>
     </div>
   </div>
